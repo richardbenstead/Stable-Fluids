@@ -4,7 +4,7 @@ BUILD_TYPE := Release
 CXX_DEBUG_FLAGS := -g -O0 -Wall
 CXX_RELEASE_FLAGS := -s -O2
 
-CXXFLAGS := -MMD -MP -std=gnu++14
+CXXFLAGS := -MMD -MP -std=c++20 -O3
 BINDIR := bin
 SRCDIR := src
 OBJDIR := obj
