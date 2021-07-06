@@ -15,10 +15,7 @@ public:
       m_plan_u_cr = fftwf_plan_dft_c2r_2d(N, N, m_fft_U, m_gridCells.u0, FFTW_MEASURE);
       m_plan_v_cr = fftwf_plan_dft_c2r_2d(N, N, m_fft_V, m_gridCells.v0, FFTW_MEASURE);
 
-      if (m_mode == E_Once)
-      {
-          addSource();
-      }
+      addSource();
   }
 
   ~Simulator2D()
