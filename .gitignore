@@ -1,7 +1,1 @@
-#Directory
-.vscode/
-bin/
-obj/
-pdfs/
-
-*.mp4
+build
