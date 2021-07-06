@@ -14,9 +14,8 @@ int main(int argc, char *argv[])
         }
     }
 
-    GridCells2D grid_cells;
-    Scene2D scene(grid_cells);
-    Simulator2D simulator(grid_cells, mode);
+    GridCells2D gridCells;
+    Simulator2D simulator(gridCells, mode);
 
     // initialize OpenGL
     if (!glfwInit())
@@ -51,7 +50,7 @@ int main(int argc, char *argv[])
     while (!glfwWindowShouldClose(window))
     {
         simulator.update();
-        scene.draw();
+        Scene2D::draw(gridCells);
 
         // swap draw buffer
         glfwSwapBuffers(window);

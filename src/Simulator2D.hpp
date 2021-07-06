@@ -13,7 +13,7 @@
 class Simulator2D
 {
 public:
-  Simulator2D(GridCells2D& grid_cells, EMode mode) :  m_mode(mode), m_grid_cells{grid_cells}
+  Simulator2D(GridCells2D& grid_cells, EMode mode) :  m_grid_cells{grid_cells}, m_mode(mode)
   {
       m_fft_U = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * N * N);
       m_fft_V = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * N * N);
@@ -45,30 +45,20 @@ public:
       densityStep();
   }
 
-  void mouseEvent(GLFWwindow *window, int button, int action, int mods)
+  void mouseEvent(GLFWwindow *window, int button, int action, [[maybe_unused]] int mods)
   {
       if (button == GLFW_MOUSE_BUTTON_LEFT)
       {
           double px, py;
           glfwGetCursorPos(window, &px, &py);
 
-          switch (action)
-          {
-          case GLFW_PRESS:
-              m_is_dragging = true;
-              m_old_pos = glm::ivec2(px, py);
-              m_new_pos = glm::ivec2(px, py);
-              break;
-          default:
-              m_is_dragging = false;
-              m_old_pos = glm::ivec2(0, 0);
-              m_new_pos = glm::ivec2(0, 0);
-              break;
-          }
+          m_is_dragging = GLFW_PRESS==action;
+          m_old_pos = glm::ivec2(px, py);
+          m_new_pos = glm::ivec2(px, py);
       }
   }
 
-  void mouseMoveEvent(GLFWwindow *window, double xpos, double ypos)
+  void mouseMoveEvent([[maybe_unused]] GLFWwindow *window, double xpos, double ypos)
   {
       if (m_is_dragging)
       {

@@ -6,10 +6,7 @@
 class Scene2D
 {
 public:
-  Scene2D(GridCells2D& grid_cells) : m_grid_cells(grid_cells) {}
-  ~Scene2D(){}
-
-  void draw()
+  static void draw(const GridCells2D& gridCells)
   {
       glClear(GL_COLOR_BUFFER_BIT);
       glMatrixMode(GL_MODELVIEW);
@@ -19,22 +16,22 @@ public:
       glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-      drawDensity();
-      drawVelocity();
-    }
+      drawDensity(gridCells);
+      drawVelocity(gridCells);
+  }
 
 private:
-  void drawDensity()
+  static void drawDensity(const GridCells2D& gridCells)
   {
       for (unsigned int y = 0; y < N; ++y) {
           for (unsigned int x = 0; x < N; ++x) {
-              glColor4d(1.0f, 1.0f, 1.0f, m_grid_cells.dens[POS(x, y)]);
+              glColor4d(1.0f, 1.0f, 1.0f, gridCells.dens[POS(x, y)]);
               glRectf(x * WIDTH / (float)N, y * HEIGHT / (float)N, (x + 1) * WIDTH / (float)N, (y + 1) * HEIGHT / (float)N);
           }
       }
   }
 
-  void drawVelocity()
+  static void drawVelocity(const GridCells2D& gridCells)
   {
       constexpr float ks{0.8f};
       glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
@@ -42,7 +39,7 @@ private:
       for (unsigned int y = 0; y < N; ++y) {
           for (unsigned int x = 0; x < N; ++x) {
               glm::vec2 p = {(x + 0.5) * WIDTH / (float)N, (y + 0.5) * HEIGHT / (float)N};
-              glm::vec2 vel = {m_grid_cells.u[POS(x, y)], m_grid_cells.v[POS(x, y)]};
+              glm::vec2 vel = {gridCells.u[POS(x, y)], gridCells.v[POS(x, y)]};
               vel = glm::normalize(vel);
               glVertex2d(p.x, p.y);
               glVertex2d(p.x + ks * (WIDTH / (float)N) * vel.x, p.y + ks * (HEIGHT / (float)N) * vel.y);
@@ -50,6 +47,4 @@ private:
       }
       glEnd();
   }
-
-  GridCells2D& m_grid_cells;
 };
