@@ -1,6 +1,6 @@
 #pragma once
-#include "constants.hpp"
 
+template<int SIZE>
 class GridCells2D
 {
 public:

@@ -1,6 +1,4 @@
 #pragma once
-#include <iostream>
-#include <string>
 
 /* Scene Constants */
 static const char *TITLE = "Stable Fluids";

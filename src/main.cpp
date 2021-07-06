@@ -1,7 +1,7 @@
-#define GLFW_INCLUDE_GLU
 #include <GLFW/glfw3.h>
 #include "Scene2D.hpp"
 #include "Simulator2D.hpp"
+#include "GridCells2D.hpp"
 #include <string>
 #include <iostream>
 
@@ -14,8 +14,11 @@ int main(int argc, char *argv[])
         }
     }
 
-    GridCells2D gridCells;
-    Simulator2D simulator(gridCells, mode);
+    using GridCellsType = GridCells2D<SIZE>;
+    GridCellsType gridCells;
+
+    using SimType = Simulator2D<GridCellsType>;
+    SimType simulator(gridCells, mode);
 
     // initialize OpenGL
     if (!glfwInit())
@@ -38,10 +41,10 @@ int main(int argc, char *argv[])
 
     // register event callback function
     glfwSetMouseButtonCallback(window, [](GLFWwindow *window, int button, int action, int mods) {
-            Simulator2D* pSim = static_cast<Simulator2D*>(glfwGetWindowUserPointer(window));
+            SimType* pSim = static_cast<SimType*>(glfwGetWindowUserPointer(window));
             pSim->mouseEvent(window, button, action, mods); });
     glfwSetCursorPosCallback(window, [](GLFWwindow *window, double xpos, double ypos) {
-            Simulator2D* pSim = static_cast<Simulator2D*>(glfwGetWindowUserPointer(window));
+            SimType* pSim = static_cast<SimType*>(glfwGetWindowUserPointer(window));
             pSim->mouseMoveEvent(window, xpos, ypos); });
 
     // initialize scene

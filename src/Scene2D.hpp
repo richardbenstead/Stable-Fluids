@@ -1,12 +1,12 @@
 #pragma once
-#include "GridCells2D.hpp"
 #include <GL/gl.h>
 #include <glm/glm.hpp>
+#include "constants.hpp"
 
 class Scene2D
 {
 public:
-  static void draw(const GridCells2D& gridCells)
+  static void draw(const auto& gridCells)
   {
       glClear(GL_COLOR_BUFFER_BIT);
       glMatrixMode(GL_MODELVIEW);
@@ -21,7 +21,7 @@ public:
   }
 
 private:
-  static void drawDensity(const GridCells2D& gridCells)
+  static void drawDensity(const auto& gridCells)
   {
       for (unsigned int y = 0; y < N; ++y) {
           for (unsigned int x = 0; x < N; ++x) {
@@ -31,7 +31,7 @@ private:
       }
   }
 
-  static void drawVelocity(const GridCells2D& gridCells)
+  static void drawVelocity(const auto& gridCells)
   {
       constexpr float ks{0.8f};
       glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
