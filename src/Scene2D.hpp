@@ -17,16 +17,16 @@ public:
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
       drawDensity(gridCells);
-      drawVelocity(gridCells);
+      //drawVelocity(gridCells);
   }
 
 private:
   static void drawDensity(const auto& gridCells)
   {
-      for (unsigned int y = 0; y < N; ++y) {
-          for (unsigned int x = 0; x < N; ++x) {
-              glColor4d(1.0f, 1.0f, 1.0f, gridCells.dens[POS(x, y)]);
-              glRectf(x * WIDTH / (float)N, y * HEIGHT / (float)N, (x + 1) * WIDTH / (float)N, (y + 1) * HEIGHT / (float)N);
+      for (unsigned int y = 0; y < GRID_SIZE; ++y) {
+          for (unsigned int x = 0; x < GRID_SIZE; ++x) {
+              glColor4d(gridCells.densityR(x, y), gridCells.densityG(x, y), gridCells.densityB(x, y), 1.0f);
+              glRectf(x * WIDTH / (float)GRID_SIZE, y * HEIGHT / (float)GRID_SIZE, (x + 1) * WIDTH / (float)GRID_SIZE, (y + 1) * HEIGHT / (float)GRID_SIZE);
           }
       }
   }
@@ -36,13 +36,13 @@ private:
       constexpr float ks{0.8f};
       glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
       glBegin(GL_LINES);
-      for (unsigned int y = 0; y < N; ++y) {
-          for (unsigned int x = 0; x < N; ++x) {
-              glm::vec2 p = {(x + 0.5) * WIDTH / (float)N, (y + 0.5) * HEIGHT / (float)N};
+      for (unsigned int y = 0; y < GRID_SIZE; ++y) {
+          for (unsigned int x = 0; x < GRID_SIZE; ++x) {
+              glm::vec2 p = {(x + 0.5) * WIDTH / (float)GRID_SIZE, (y + 0.5) * HEIGHT / (float)GRID_SIZE};
               glm::vec2 vel = {gridCells.u[POS(x, y)], gridCells.v[POS(x, y)]};
               vel = glm::normalize(vel);
               glVertex2d(p.x, p.y);
-              glVertex2d(p.x + ks * (WIDTH / (float)N) * vel.x, p.y + ks * (HEIGHT / (float)N) * vel.y);
+              glVertex2d(p.x + ks * (WIDTH / (float)GRID_SIZE) * vel.x, p.y + ks * (HEIGHT / (float)GRID_SIZE) * vel.y);
           }
       }
       glEnd();

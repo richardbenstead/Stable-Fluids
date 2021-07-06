@@ -7,8 +7,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O1")
+set(CMAKE_CXX_FLAGS_RELEASE "-g -O3 -DNDEBUG")
 
 project(Stable-Fluids)
 add_executable(Stable-Fluids src/main.cpp)

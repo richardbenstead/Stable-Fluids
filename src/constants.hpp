@@ -6,21 +6,17 @@ constexpr int WIDTH = 1400;
 constexpr int HEIGHT = 1000;
 
 /* Simulator Constants */
-constexpr int N = 100;
-constexpr int SOURCE_SIZE = N/4;
+constexpr int GRID_SIZE = 500;
 
 constexpr float INTERACTION = 1000000.0f;
 
 constexpr float VISCOSITY = 0.01f;
-constexpr float GRAVITY_Y = 9.8f;
-constexpr float DT = 0.0005;
+constexpr float GRAVITY_Y = 1;
+constexpr float DT = 0.001;
 
-constexpr int MATSIZE{N*N};
+constexpr int POS(int i, int j) { return i + GRID_SIZE * j; };
 
-constexpr int POS(int i, int j) { return i + N * j; };
-
-enum EMode
-{
-    E_Continuous = 0,
-    E_Once = 1
-};
+// TODO:
+// resize window
+// key to change mode, grid etc
+// don't render with rects

@@ -7,9 +7,7 @@ Only tested on Linux
 * fftw3f
 * GLFW
 
-## Screenshot
+## Screenshots
 
-![Screenshot](output/Screenshot.png)
-
-Each of red lines shows the direction of the grid's velocity and 
-brightness represents density at the position.
+![Screenshot1](output/ss1.png)
+![Screenshot2](output/ss2.png)
