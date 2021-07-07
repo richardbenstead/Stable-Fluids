@@ -1,5 +1,9 @@
 #pragma once
+#include "constants.h"
+#include "utils.h"
 #include <vector>
+#include <cmath>
+
 
 template<typename GridCellsType>
 class SceneMovingSources
@@ -61,7 +65,7 @@ public:
                     satAdd(mGridCells.density[POS(i+x, j+y)].r, r*wgt);
                     satAdd(mGridCells.density[POS(i+x, j+y)].g, g*wgt);
                     satAdd(mGridCells.density[POS(i+x, j+y)].b, b*wgt);
-                    mGridCells.velocity[POS(i+x, j+y)] += typename GridCellsType::XYPair{u, v} * wgt;
+                    mGridCells.velocity[POS(i+x, j+y)] += XYPair{u, v} * wgt;
                 }
             }
         }

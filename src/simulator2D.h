@@ -5,7 +5,6 @@
 template<typename GridCellsType>
 class Simulator2D
 {
-    using XYPair = typename GridCellsType::XYPair;
 public:
     Simulator2D(GridCellsType& gridCells) :  mGridCells{gridCells}
     {
@@ -59,7 +58,7 @@ public:
 
         // advect density
         mGridCells.densityCopy = mGridCells.density;
-        advect<typename GridCellsType::Density>(mGridCells.velocity, mGridCells.densityCopy, mGridCells.density);
+        advect<Density>(mGridCells.velocity, mGridCells.densityCopy, mGridCells.density);
     }
 
 private:
