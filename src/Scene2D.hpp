@@ -23,7 +23,7 @@ private:
   static void drawDensity(const auto& gridCells, const int width, const int height)
   {
       glPixelZoom(width/static_cast<float>(GRID_SIZE), -height/static_cast<float>(GRID_SIZE));
-      glRasterPos2i(1, height);
+      glRasterPos2i(0, height);
       glDrawPixels(GRID_SIZE, GRID_SIZE, GL_RGB, GL_FLOAT, &gridCells.density[0]);
   }
 

@@ -35,7 +35,7 @@ public:
     void advect(const auto& velSource, const auto& dataSource, auto& dataTgt)
     {
         for (unsigned int j = 0; j < GRID_SIZE; ++j) {
-            for (unsigned int i = 1; i < GRID_SIZE; ++i) {
+            for (unsigned int i = 0; i < GRID_SIZE; ++i) {
                 const int idx = POS(i, j);
                 const XYPair point(i, j);
                 const XYPair offset = velSource[idx] * GRID_SIZE * DT;
@@ -114,7 +114,7 @@ private:
         }
     }
 
-    // interpolate the 4 points around the specified location
+    // interpolate the 4 cells around the specified point
     template<typename CellType>
     CellType interpolate(const XYPair& point, const auto& q)
     {
@@ -123,7 +123,7 @@ private:
         const float decX = point.x - intX;
         const float decY = point.y - intY;
 
-        auto inRange = [](const float x) { return x >= 0 && x < GRID_SIZE; };
+        auto inRange = [](const int x) { return x >= 0 && x < GRID_SIZE; };
         const bool xInRange = inRange(intX);
         const bool yInRange = inRange(intY);
 
@@ -155,7 +155,6 @@ private:
         }
         return out;
     }
-
 
     GridCellsType& mGridCells;
 

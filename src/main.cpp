@@ -19,7 +19,7 @@ public:
             throw std::runtime_error("glfwInit failed");
         }
 
-        mpWindow = glfwCreateWindow(800, 800, "Stable fluids sim", nullptr, nullptr);
+        mpWindow = glfwCreateWindow(1200, 800, "Stable fluids sim", nullptr, nullptr);
         if (!mpWindow) {
             throw std::runtime_error("glfwCreateWindow failed");
         }
@@ -90,7 +90,7 @@ public:
         for(int i=-width/2; i<=width/2; ++i) {
             for(int j=-height/2; j<=height/2; ++j) {
                 if (i+x>=0 && j+y>=0 && i+x<GRID_SIZE && j+y<GRID_SIZE) {
-                    float alpha = -log(0.5)/(GRID_SIZE*GRID_SIZE/2000);
+                    float alpha = -log(0.5)/(GRID_SIZE*GRID_SIZE/2000.0);
                     float wgt = exp(-alpha * (i*i + j*j));
 
                     auto satAdd = [](float& x, const float& y) { x = std::min(1.0f, x+y); };
