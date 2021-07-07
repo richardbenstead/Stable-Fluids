@@ -1,4 +1,3 @@
-#define EIGEN_STACK_ALLOCATION_LIMIT 0
 #include <GLFW/glfw3.h>
 #include "Scene2D.hpp"
 #include "Simulator2D.hpp"
@@ -12,6 +11,7 @@ class StableFluids
 public:
     using GridCellsType = GridCells2D<GRID_SIZE>;
     using SimType = Simulator2D<GridCellsType>;
+    using XYPair = typename GridCellsType::XYPair;
 
     StableFluids() : mSimulator(mGridCells)
     {
@@ -19,7 +19,7 @@ public:
             throw std::runtime_error("glfwInit failed");
         }
 
-        mpWindow = glfwCreateWindow(WIDTH, HEIGHT, TITLE, nullptr, nullptr);
+        mpWindow = glfwCreateWindow(800, 800, "Stable fluids sim", nullptr, nullptr);
         if (!mpWindow) {
             throw std::runtime_error("glfwCreateWindow failed");
         }
@@ -77,7 +77,9 @@ public:
                      velWgt * getSpeed(GRID_SIZE/3, 2, 5),
                      velWgt * getSpeed(GRID_SIZE/3, 2, 7));
 
-            Scene2D::draw(mGridCells);
+            int width, height;
+            glfwGetWindowSize(mpWindow, &width, &height);
+            Scene2D::draw(mGridCells, width, height);
             glfwSwapBuffers(mpWindow);
             glfwPollEvents();
         }
@@ -93,11 +95,10 @@ public:
 
                     auto satAdd = [](float& x, const float& y) { x = std::min(1.0f, x+y); };
 
-                    satAdd(mGridCells.densityR(i+x, j+y), r*wgt);
-                    satAdd(mGridCells.densityG(i+x, j+y), g*wgt);
-                    satAdd(mGridCells.densityB(i+x, j+y), b*wgt);
-                    mGridCells.u[POS(i+x, j+y)] += u*wgt;
-                    mGridCells.v[POS(i+x, j+y)] += v*wgt;
+                    satAdd(mGridCells.density[POS(i+x, j+y)].r, r*wgt);
+                    satAdd(mGridCells.density[POS(i+x, j+y)].g, g*wgt);
+                    satAdd(mGridCells.density[POS(i+x, j+y)].b, b*wgt);
+                    mGridCells.velocity[POS(i+x, j+y)] += GridCellsType::XYPair{u*wgt, v*wgt};
                 }
             }
         }
@@ -108,7 +109,7 @@ public:
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
             double px, py;
             glfwGetCursorPos(window, &px, &py);
-            mLastMousePos = glm::ivec2(px, py);
+            mLastMousePos = XYPair(px, py);
             mMouseLeftDown = GLFW_PRESS==action;
         }
     }
@@ -116,32 +117,18 @@ public:
     void mouseMoveEvent([[maybe_unused]] GLFWwindow *window, double xpos, double ypos)
     {
         if (mMouseLeftDown) {
-            glm::ivec2 newMousePos = glm::ivec2(xpos, ypos);
+            int width, height;
+            glfwGetWindowSize(mpWindow, &width, &height);
 
-            float dx = newMousePos.x - mLastMousePos.x;
-            float dy = newMousePos.y - mLastMousePos.y;
-            float length = dx * dx + dy * dy;
-            if (length >= 2.0f) // ignore slight movement
+            XYPair newMousePos(xpos, ypos);
+            XYPair delta = newMousePos - mLastMousePos;
+            if (delta.norm() >= 2.0f) // ignore slight movement
             {
-                // calculate force
-                float tmp_fx = INTERACTION * GRID_SIZE * (newMousePos.x - mLastMousePos.x) / (float)WIDTH;
-                float tmp_fy = INTERACTION * GRID_SIZE * (newMousePos.y - mLastMousePos.y) / (float)HEIGHT;
+                int idx = POS(std::max(0, std::min<int>(GRID_SIZE-1, GRID_SIZE * newMousePos.x / (float)width)),
+                              std::max(0, std::min<int>(GRID_SIZE-1, GRID_SIZE * newMousePos.y / (float)height)));
 
-                // specify the index to add force
-                unsigned int i = std::fmax(0.0, std::fmin(GRID_SIZE - 1, GRID_SIZE * newMousePos.x / (float)WIDTH));
-                unsigned int j = std::fmax(0.0, std::fmin(GRID_SIZE - 1, GRID_SIZE * newMousePos.y / (float)HEIGHT));
-                if (i > 0 && j > 0 && i < GRID_SIZE - 1 && j < GRID_SIZE - 1)
-                { // avoid edge of grid
-                    // calculate weight
-                    float wx = GRID_SIZE * newMousePos.x / (float)WIDTH - i;
-                    float wy = GRID_SIZE * newMousePos.y / (float)HEIGHT - j;
-
-                    // add force
-                    mGridCells.fx[POS(i, j)] = (1.0 - wx) * tmp_fx;
-                    mGridCells.fx[POS(i + 1, j)] = wx * tmp_fx;
-                    mGridCells.fy[POS(i, j)] = (1.0 - wy) * tmp_fy;
-                    mGridCells.fy[POS(i, j + 1)] = wy * tmp_fy;
-                }
+                mGridCells.force[idx] = XYPair{GRID_SIZE * delta.x / width,
+                                               GRID_SIZE * delta.y / height} * INTERACTION;
                 mLastMousePos = newMousePos;
             }
         }
@@ -154,7 +141,7 @@ private:
     GridCellsType mGridCells;
 
     bool mMouseLeftDown{false};
-    glm::ivec2 mLastMousePos;
+    XYPair mLastMousePos{};
 };
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])

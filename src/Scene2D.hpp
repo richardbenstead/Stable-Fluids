@@ -1,48 +1,46 @@
 #pragma once
 #include <GL/gl.h>
-#include <glm/glm.hpp>
 #include "constants.hpp"
+#include <math.h>
+#include <cstring>
+#include <iostream>
 
 class Scene2D
 {
 public:
-  static void draw(const auto& gridCells)
+  static void draw(const auto& gridCells, const int width, const int height)
   {
-      glClear(GL_COLOR_BUFFER_BIT);
-      glMatrixMode(GL_MODELVIEW);
-      glViewport(0, 0, WIDTH, HEIGHT);
       glLoadIdentity();
-      glOrtho(0, WIDTH, HEIGHT, 0, -1.0, 1.0);
-      glEnable(GL_BLEND);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      glMatrixMode(GL_MODELVIEW);
+      glOrtho(0, width, 0, height, -1.0, 1.0);
+      glViewport(0,0,width,height);
 
-      drawDensity(gridCells);
+      drawDensity(gridCells, width, height);
       //drawVelocity(gridCells);
   }
 
 private:
-  static void drawDensity(const auto& gridCells)
+  static void drawDensity(const auto& gridCells, const int width, const int height)
   {
-      for (unsigned int y = 0; y < GRID_SIZE; ++y) {
-          for (unsigned int x = 0; x < GRID_SIZE; ++x) {
-              glColor4d(gridCells.densityR(x, y), gridCells.densityG(x, y), gridCells.densityB(x, y), 1.0f);
-              glRectf(x * WIDTH / (float)GRID_SIZE, y * HEIGHT / (float)GRID_SIZE, (x + 1) * WIDTH / (float)GRID_SIZE, (y + 1) * HEIGHT / (float)GRID_SIZE);
-          }
-      }
+      glPixelZoom(width/static_cast<float>(GRID_SIZE), -height/static_cast<float>(GRID_SIZE));
+      glRasterPos2i(1, height);
+      glDrawPixels(GRID_SIZE, GRID_SIZE, GL_RGB, GL_FLOAT, &gridCells.density[0]);
   }
 
-  static void drawVelocity(const auto& gridCells)
+  static void drawVelocity(const auto& gridCells, const int width, const int height)
   {
       constexpr float ks{0.8f};
       glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
       glBegin(GL_LINES);
       for (unsigned int y = 0; y < GRID_SIZE; ++y) {
           for (unsigned int x = 0; x < GRID_SIZE; ++x) {
-              glm::vec2 p = {(x + 0.5) * WIDTH / (float)GRID_SIZE, (y + 0.5) * HEIGHT / (float)GRID_SIZE};
-              glm::vec2 vel = {gridCells.u[POS(x, y)], gridCells.v[POS(x, y)]};
-              vel = glm::normalize(vel);
-              glVertex2d(p.x, p.y);
-              glVertex2d(p.x + ks * (WIDTH / (float)GRID_SIZE) * vel.x, p.y + ks * (HEIGHT / (float)GRID_SIZE) * vel.y);
+              float px = (x + 0.5) * width / (float)GRID_SIZE;
+              float py = (y + 0.5) * height / (float)GRID_SIZE;
+              float vx = gridCells.u[POS(x, y)];
+              float vy = gridCells.v[POS(x, y)];
+              float len = sqrt(vx*vx + vy*vy);
+              glVertex2d(px, py);
+              glVertex2d(px + ks * (width / (float)GRID_SIZE) * vx/len, py + ks * (height / (float)GRID_SIZE) * vy/len);
           }
       }
       glEnd();
