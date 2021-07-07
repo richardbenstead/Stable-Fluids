@@ -44,18 +44,18 @@ public:
         }
     }
 
-    void update()
+    void update(const float gravity, const float viscosity)
     {
         // Update velocities using forces
         for (int i = 0; i < GRID_SIZE*GRID_SIZE; ++i) {
             mGridCells.velocity[i] += mGridCells.force[i] * DT;
-            mGridCells.force[i] = XYPair{0.0f, GRAVITY_Y};
+            mGridCells.force[i] = XYPair{0.0f, gravity};
         }
         
         // Advect velocities
         mGridCells.velocityCopy = mGridCells.velocity;
         advect<XYPair>(mGridCells.velocityCopy, mGridCells.velocityCopy, mGridCells.velocity);
-        diffuseVelocities();
+        diffuseVelocities(viscosity);
 
         // advect density
         mGridCells.densityCopy = mGridCells.density;
@@ -63,7 +63,7 @@ public:
     }
 
 private:
-    void diffuseVelocities()
+    void diffuseVelocities(const float viscosity)
     {
         for (int i = 0; i < GRID_SIZE*GRID_SIZE; ++i) { // copy velocity
             mFft_ur[i] = mGridCells.velocity[i].x;
@@ -83,7 +83,7 @@ private:
 
                 if (kk > 0.001)
                 {
-                    const float f = std::exp(-kk * DT * VISCOSITY);
+                    const float f = std::exp(-kk * DT * viscosity);
                     const int idx = i + j * (GRID_SIZE / 2 + 1);
 
                     const float U0 = mFft_uc[idx][0];

@@ -1,11 +1,11 @@
 #pragma once
 #include <GL/gl.h>
-#include "constants.hpp"
+#include "constants.h"
 #include <math.h>
 #include <cstring>
 #include <iostream>
 
-class Scene2D
+class WinFluid
 {
 public:
   static void draw(const auto& gridCells, const int width, const int height)
