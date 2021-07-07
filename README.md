@@ -8,6 +8,5 @@ Only tested on Linux
 * GLFW
 
 ## Screenshots
-
-![Screenshot1](output/ss1.png)
+[![Screenshot1](output/ss1.png)](https://youtu.be/tUs-WExrkkI)
 ![Screenshot2](output/ss2.png)
