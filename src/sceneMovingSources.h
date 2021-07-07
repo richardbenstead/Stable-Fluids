@@ -1,21 +1,19 @@
 #pragma once
+#include "sceneBase.h"
 #include "constants.h"
 #include "utils.h"
 #include <vector>
-#include <cmath>
 
 
 template<typename GridCellsType>
-class SceneMovingSources
+class SceneMovingSources : public SceneBase
 {
 public:
-    SceneMovingSources(GridCellsType& gc) : mGridCells(gc)
-    {}
+    SceneMovingSources(GridCellsType& gc) : mGridCells(gc) {}
 
     constexpr float getViscosity() { return 0.001f; }
-    constexpr float getGravity() { return 9.81f; }
 
-    void update(float time)
+    void update(const float time)
     {
         constexpr float velWgt = DT * 10.0f;
         constexpr int size = std::max(1, GRID_SIZE/5);

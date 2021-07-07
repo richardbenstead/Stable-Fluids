@@ -31,6 +31,9 @@ public:
         glfwSetCursorPosCallback(mpWindow, [](GLFWwindow *window, double xpos, double ypos) {
                 static_cast<WinFluid*>(glfwGetWindowUserPointer(window))->mouseMoveEvent(window, xpos, ypos); });
 
+        glfwSetKeyCallback(mpWindow, [](GLFWwindow* window, int key, int sc, int action, int mods) {
+                static_cast<WinFluid*>(glfwGetWindowUserPointer(window))->keyEvent(window, key, sc, action, mods); });
+
     }
 
     void draw()
@@ -52,8 +55,10 @@ public:
 
     bool finished()
     {
-        return glfwWindowShouldClose(mpWindow);
+        return mQuit || glfwWindowShouldClose(mpWindow);
     }
+
+    int getSceneId() { return mSceneId; }
 
 private:
     void drawDensity(const int width, const int height)
@@ -112,10 +117,20 @@ private:
         }
     }
 
+    void keyEvent([[maybe_unused]] GLFWwindow *window, int key, [[maybe_unused]] int sc, int action, [[maybe_unused]] int mods)
+    {
+        if (GLFW_PRESS == action) {
+            if (key == 'Q') mQuit = true;
+            if (key == ' ') mSceneId++;
+        }
+    }
+
 
     GridCellsType& mGridCells;
     GLFWwindow *mpWindow{};
 
+    int mSceneId{};
     bool mMouseLeftDown{false};
     XYPair mLastMousePos{};
+    bool mQuit{false};
 };

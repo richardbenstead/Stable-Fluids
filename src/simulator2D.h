@@ -31,19 +31,19 @@ public:
     }
 
     template<typename DataType>
-    void advect(const auto& velSource, const auto& dataSource, auto& dataTgt)
+    void advect(const auto& velSource, const auto& dataSource, auto& dataTgt, const float trans)
     {
         for (unsigned int j = 0; j < GRID_SIZE; ++j) {
             for (unsigned int i = 0; i < GRID_SIZE; ++i) {
                 const int idx = POS(i, j);
                 const XYPair point(i, j);
                 const XYPair offset = velSource[idx] * GRID_SIZE * DT;
-                dataTgt[idx] = interpolate<DataType>(point - offset, dataSource);
+                dataTgt[idx] = interpolate<DataType>(point - offset, dataSource) * trans;
             }
         }
     }
 
-    void update(const float gravity, const float viscosity)
+    void update(const float gravity, const float viscosity, const float pressureTrans)
     {
         // Update velocities using forces
         for (int i = 0; i < GRID_SIZE*GRID_SIZE; ++i) {
@@ -53,12 +53,12 @@ public:
         
         // Advect velocities
         mGridCells.velocityCopy = mGridCells.velocity;
-        advect<XYPair>(mGridCells.velocityCopy, mGridCells.velocityCopy, mGridCells.velocity);
+        advect<XYPair>(mGridCells.velocityCopy, mGridCells.velocityCopy, mGridCells.velocity, 1.0f);
         diffuseVelocities(viscosity);
 
         // advect density
         mGridCells.densityCopy = mGridCells.density;
-        advect<Density>(mGridCells.velocity, mGridCells.densityCopy, mGridCells.density);
+        advect<Density>(mGridCells.velocity, mGridCells.densityCopy, mGridCells.density, pressureTrans);
     }
 
 private:

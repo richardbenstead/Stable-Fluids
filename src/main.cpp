@@ -1,4 +1,5 @@
 #include "sceneMovingSources.h"
+#include "sceneFire.h"
 #include "simulator2D.h"
 #include "gridCells2D.h"
 #include <GLFW/glfw3.h>
@@ -16,8 +17,11 @@ public:
     using SimType = Simulator2D<GridCellsType>;
     using WinFluidType = WinFluid<GridCellsType>;
 
-    StableFluids() : mSimulator(mGridCells), mScene(mGridCells), mWinFluid(mGridCells)
+    StableFluids() : mSimulator(mGridCells), mWinFluid(mGridCells)
     {
+        mVecScene.push_back(new SceneMovingSources<GridCellsType>(mGridCells));
+        mVecScene.push_back(new SceneFire<GridCellsType>(mGridCells));
+
         if (!glfwInit()) {
             throw std::runtime_error("glfwInit failed");
         }
@@ -35,9 +39,9 @@ public:
         while (!mWinFluid.finished()) {
             time += DT;
 
-            auto& scene = mScene;
+            auto& scene = *mVecScene[mWinFluid.getSceneId() % mVecScene.size()];
             scene.update(time);
-            mSimulator.update(scene.getGravity(), scene.getViscosity());
+            mSimulator.update(scene.getGravity(), scene.getViscosity(), scene.getPressureTrans());
 
             mWinFluid.draw();
         }
@@ -46,19 +50,12 @@ public:
 private:
     SimType mSimulator;
     GridCellsType mGridCells;
-    SceneMovingSources<GridCellsType> mScene;
+    std::vector<SceneBase*> mVecScene;
     WinFluidType mWinFluid;
 };
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 {
-    /*
-    for (int i=1; i < argc; ++i) {
-        if (std::string(argv[i]) == "-o") {
-            mode = E_Once;
-        }
-    }*/
-
     StableFluids* sf = new StableFluids();
     sf->run();
     delete sf;
