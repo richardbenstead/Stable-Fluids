@@ -112,6 +112,7 @@ private:
 
                 mGridCells.force[idx] = XYPair{GRID_SIZE * delta.x / width,
                                                GRID_SIZE * delta.y / height} * INTERACTION;
+
                 mLastMousePos = newMousePos;
             }
         }

@@ -1,5 +1,7 @@
-#include "sceneMovingSources.h"
-#include "sceneFire.h"
+#include "scene/sceneMovingSources.h"
+#include "scene/sceneBlank.h"
+#include "scene/sceneFire.h"
+#include "scene/sceneText.h"
 #include "simulator2D.h"
 #include "gridCells2D.h"
 #include <GLFW/glfw3.h>
@@ -21,6 +23,8 @@ public:
     {
         mVecScene.push_back(new SceneMovingSources<GridCellsType>(mGridCells));
         mVecScene.push_back(new SceneFire<GridCellsType>(mGridCells));
+        mVecScene.push_back(new SceneText<GridCellsType>(mGridCells));
+        mVecScene.push_back(new SceneBlank<GridCellsType>(mGridCells));
 
         if (!glfwInit()) {
             throw std::runtime_error("glfwInit failed");
@@ -41,7 +45,7 @@ public:
 
             auto& scene = *mVecScene[mWinFluid.getSceneId() % mVecScene.size()];
             scene.update(time);
-            mSimulator.update(scene.getGravity(), scene.getViscosity(), scene.getPressureTrans());
+            mSimulator.update(scene.getParams());
 
             mWinFluid.draw();
         }

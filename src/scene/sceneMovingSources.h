@@ -1,7 +1,5 @@
 #pragma once
-#include "sceneBase.h"
-#include "constants.h"
-#include "utils.h"
+#include "src/scene/sceneBase.h"
 #include <vector>
 
 
@@ -11,7 +9,10 @@ class SceneMovingSources : public SceneBase
 public:
     SceneMovingSources(GridCellsType& gc) : mGridCells(gc) {}
 
-    constexpr float getViscosity() { return 0.001f; }
+    constexpr SceneParams getParams() { return SceneParams{0.01f, // viscosity
+                                                           9.0f, // gravity
+                                                           1.0f, // density
+                                                           0.01f};} // diffusion
 
     void update(const float time)
     {
