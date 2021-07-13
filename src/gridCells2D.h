@@ -4,12 +4,15 @@
 #include <math.h>
 #include <array>
 
-template<int GRID_SIZE>
+
+template<int16_t GS>
 class GridCells2D
 {
 public:
-    static constexpr int ARR_SIZE = GRID_SIZE * GRID_SIZE;
+    static constexpr int16_t GRID_SIZE{GS};
+    static constexpr int32_t ARR_SIZE{GS*GS};
 
+    constexpr inline static int32_t POS(int16_t i, int16_t j) { return i + GRID_SIZE * j; };
     std::array<XYPair, ARR_SIZE> velocity{};
     std::array<XYPair, ARR_SIZE> velocityCopy{};
 

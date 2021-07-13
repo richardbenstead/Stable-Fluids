@@ -2,11 +2,14 @@
 #include <fftw3.h>
 #include <iostream>
 
+
 template<typename GridCellsType>
 class Simulator2D
 {
+    static constexpr uint16_t GRID_SIZE = GridCellsType::GRID_SIZE;
+    auto POS(auto x, auto y) { return GridCellsType::POS(x,y); }
 public:
-    Simulator2D(GridCellsType& gridCells) :  mGridCells{gridCells}
+    Simulator2D(GridCellsType& gridCells, const float _DT) :  mGridCells{gridCells}, DT{_DT}
     {
         mFft_uc = fftwf_alloc_complex(GRID_SIZE * GRID_SIZE);
         mFft_vc = fftwf_alloc_complex(GRID_SIZE * GRID_SIZE);
@@ -31,74 +34,131 @@ public:
     }
 
     template<typename DataType>
-    void advect(const auto& velSource, const auto& dataSource, auto& dataTgt, const float trans)
+    void advect(const auto& velSource, const auto& dataSource, auto& dataTgt)
     {
-        for (unsigned int j = 0; j < GRID_SIZE; ++j) {
-            for (unsigned int i = 0; i < GRID_SIZE; ++i) {
+        for (unsigned int j = 1; j < GRID_SIZE-1; ++j) {
+            for (unsigned int i = 1; i < GRID_SIZE-1; ++i) {
                 const int idx = POS(i, j);
-                const XYPair point(i, j);
-                const XYPair offset = velSource[idx] * GRID_SIZE * DT;
-                dataTgt[idx] = interpolate<DataType>(point - offset, dataSource) * trans;
+                XYPair point = XYPair(i, j) - velSource[idx] * GRID_SIZE * DT;
+                dataTgt[idx] = interpolate<DataType>(point, dataSource);
             }
         }
     }
 
-    void update(const float gravity, const float viscosity, const float pressureTrans)
+    void setDensityBoundary(auto& dataTgt)
+    {
+        for (int i=1 ; i<=GRID_SIZE ; i++) {
+            dataTgt[POS(0, i)] = dataTgt[POS(1, i)];
+            dataTgt[POS(GRID_SIZE-1, i)] = dataTgt[POS(GRID_SIZE-2,i)];
+            dataTgt[POS(i, 0)] = dataTgt[POS(i, 1)];
+            dataTgt[POS(i, GRID_SIZE-1)] = dataTgt[POS(i,GRID_SIZE-2)];
+        }
+        dataTgt[POS(0, 0)] = (dataTgt[POS(1, 0)]+dataTgt[POS(0, 1)]) * 0.5;
+        dataTgt[POS(0, GRID_SIZE-1)] = (dataTgt[POS(1, GRID_SIZE-1)]+dataTgt[POS(0, GRID_SIZE-2)]) * 0.5;
+        dataTgt[POS(GRID_SIZE-1, 0)] = (dataTgt[POS(GRID_SIZE-2, 0)]+dataTgt[POS(GRID_SIZE-1, 1)]) * 0.5;
+        dataTgt[POS(GRID_SIZE-1, GRID_SIZE-1)] = (dataTgt[POS(GRID_SIZE-2, GRID_SIZE-1)]+dataTgt[POS(GRID_SIZE-1, GRID_SIZE-2)]) * 0.5;
+    }
+
+    void setVelocityBoundary(auto& dataTgt)
+    {
+        for (int i=1; i<=GRID_SIZE; i++) {
+            dataTgt[POS(0, i)].x = -dataTgt[POS(1,i)].x;
+            dataTgt[POS(0, i)].y = dataTgt[POS(1,i)].y;
+            dataTgt[POS(GRID_SIZE-1, i)].x = 0-dataTgt[POS(GRID_SIZE-2,i)].x;
+            dataTgt[POS(GRID_SIZE-1, i)].y = dataTgt[POS(GRID_SIZE-2,i)].y;
+            dataTgt[POS(i, 0)].x = dataTgt[POS(i,1)].x;
+            dataTgt[POS(i, 0)].y = -dataTgt[POS(i,1)].y;
+            dataTgt[POS(i, GRID_SIZE-1)].x = dataTgt[POS(i,GRID_SIZE-2)].x;
+            dataTgt[POS(i, GRID_SIZE-1)].y = -dataTgt[POS(i,GRID_SIZE-2)].y;
+        }
+        dataTgt[POS(0,0)] = (dataTgt[POS(1,0)]+dataTgt[POS(0,1)]) * 0.5;
+        dataTgt[POS(0, GRID_SIZE-1)] = (dataTgt[POS(1, GRID_SIZE-1)]+dataTgt[POS(0, GRID_SIZE-2)]) * 0.5;
+        dataTgt[POS(GRID_SIZE-1,0)] = (dataTgt[POS(GRID_SIZE-2, 0)]+dataTgt[POS(GRID_SIZE-1,1)]) * 0.5;
+        dataTgt[POS(GRID_SIZE-1,GRID_SIZE-1)] = (dataTgt[POS(GRID_SIZE-2, GRID_SIZE-1)]+dataTgt[POS(GRID_SIZE-1, GRID_SIZE-2)]) * 0.5;
+    }
+
+    void update(const auto params)
     {
         // Update velocities using forces
         for (int i = 0; i < GRID_SIZE*GRID_SIZE; ++i) {
             mGridCells.velocity[i] += mGridCells.force[i] * DT;
-            mGridCells.force[i] = XYPair{0.0f, gravity};
+            mGridCells.force[i] = XYPair{0.0f, params.gravity};
         }
         
+        // apply viscosity term and solve for non-divergent velocities
+        // setVelocityBoundary(mGridCells.velocity);
+        diffuseVelocities(params.viscosity);
+        setVelocityBoundary(mGridCells.velocity);
+
+        // Advect density
+        mGridCells.densityCopy = mGridCells.density;
+        advect<Density>(mGridCells.velocity, mGridCells.densityCopy, mGridCells.density);
+
+        mGridCells.densityCopy = mGridCells.density;
+        diffuse(mGridCells.density, mGridCells.densityCopy, params.diffusion, params.densityTrans);
+
         // Advect velocities
         mGridCells.velocityCopy = mGridCells.velocity;
-        advect<XYPair>(mGridCells.velocityCopy, mGridCells.velocityCopy, mGridCells.velocity, 1.0f);
-        diffuseVelocities(viscosity);
-
-        // advect density
-        mGridCells.densityCopy = mGridCells.density;
-        advect<Density>(mGridCells.velocity, mGridCells.densityCopy, mGridCells.density, pressureTrans);
+        advect<XYPair>(mGridCells.velocityCopy, mGridCells.velocityCopy, mGridCells.velocity);
     }
 
 private:
+    void diffuse(auto& dataTgt, const auto& dataSource, const float diffusion, const float trans)
+    {
+        const float a = DT * diffusion * GRID_SIZE * GRID_SIZE;
+        for (int k=0 ; k<20 ; k++ ) {
+            for (int i=1 ; i<=GRID_SIZE-2 ; i++ ) {
+                for (int j=1 ; j<=GRID_SIZE-2 ; j++ ) {
+                    dataTgt[POS(i,j)] = (dataSource[POS(i,j)] + (dataTgt[POS(i-1,j)] + dataTgt[POS(i+1,j)] +
+                                         dataTgt[POS(i,j-1)] + dataTgt[POS(i,j+1)]) * a) * (trans/(1+4*a));
+                }
+            }
+            setDensityBoundary(dataTgt);
+        }
+    }
+
     void diffuseVelocities(const float viscosity)
     {
         for (int i = 0; i < GRID_SIZE*GRID_SIZE; ++i) { // copy velocity
-            mFft_ur[i] = mGridCells.velocity[i].x;
-            mFft_vr[i] = mGridCells.velocity[i].y;
+            const auto& v = mGridCells.velocity[i];
+            mFft_ur[i] = v.x;
+            mFft_vr[i] = v.y;
         }
 
         fftwf_execute(m_plan_u_rc); // FFT of velocities
         fftwf_execute(m_plan_v_rc);
 
-        // diffuse step in fourier space
-        // damp viscosity and conserve mass
+        // diffuse step in frequency domain
         for (int j = 0; j < GRID_SIZE; ++j) {
+            int idx = j * (GRID_SIZE / 2 + 1);
             const float ky = (j <= GRID_SIZE / 2) ? j : j - GRID_SIZE;
             for (int i = 0; i <= GRID_SIZE / 2; ++i) {
                 const float kx = i;
                 const float kk = kx * kx + ky * ky; // squared norm
 
-                if (kk > 0.001)
+                if (kk > 1e-9)
                 {
-                    const float f = std::exp(-kk * DT * viscosity);
-                    const int idx = i + j * (GRID_SIZE / 2 + 1);
+                    const float u0 = mFft_uc[idx][0];
+                    const float v0 = mFft_vc[idx][0];
+                    const float u1 = mFft_uc[idx][1];
+                    const float v1 = mFft_vc[idx][1];
 
-                    const float U0 = mFft_uc[idx][0];
-                    const float V0 = mFft_vc[idx][0];
-                    const float U1 = mFft_uc[idx][1];
-                    const float V1 = mFft_vc[idx][1];
-
-                    // update values, preserving mass
+                    // Note: Mass conserving velocity corresponds to vectors in
+                    // frequency domain that are perpendicular to the wavenumber
+                    // Therefore, projecting to the mass conserving vector removes divergent flow
                     const float wxx = kx * kx / kk;
                     const float wxy = ky * kx / kk;
                     const float wyy = ky * ky / kk;
-                    mFft_uc[idx][0] = f * ((1 - wxx) * U0 - wxy * V0);
-                    mFft_uc[idx][1] = f * ((1 - wxx) * U1 - wxy * V1);
-                    mFft_vc[idx][0] = f * (-wxy * U0 + (1 - wyy) * V0);
-                    mFft_vc[idx][1] = f * (-wxy * U1 + (1 - wyy) * V1);
+
+                    const float f = std::exp(-kk * DT * viscosity); // viscosity
+
+                    // update the Fourier values
+                    mFft_uc[idx][0] = f * ((1 - wxx) * u0 - wxy * v0);
+                    mFft_uc[idx][1] = f * ((1 - wxx) * u1 - wxy * v1);
+                    mFft_vc[idx][0] = f * ((1 - wyy) * v0 - wxy * u0);
+                    mFft_vc[idx][1] = f * ((1 - wyy) * v1 - wxy * u1);
                 }
+                idx++;
             }
         }
 
@@ -115,47 +175,28 @@ private:
 
     // interpolate the 4 cells around the specified point
     template<typename CellType>
-    CellType interpolate(const XYPair& point, const auto& q)
+    CellType interpolate(XYPair& point, const auto& q)
     {
-        const int intX = floor(point.x);
-        const int intY = floor(point.y);
+        auto clip = [](float& a, const float mn, const float mx) {
+            a = std::min(mx, std::max(mn, a));
+        };
+
+        clip(point.x, 0.5, GRID_SIZE-1.5);
+        clip(point.y, 0.5, GRID_SIZE-1.5);
+
+        const int intX = static_cast<int>(point.x);
+        const int intY = static_cast<int>(point.y);
         const float decX = point.x - intX;
         const float decY = point.y - intY;
 
-        auto inRange = [](const int x) { return x >= 0 && x < GRID_SIZE; };
-        const bool xInRange = inRange(intX);
-        const bool yInRange = inRange(intY);
-
-        if (intX>=0 && intY>=0 && intX+1 < GRID_SIZE && intY+1 < GRID_SIZE) {
-            [[likely]];
-            return q[POS(intX, intY)] * (1.0f - decX) * (1.0f - decY) +
-                   q[POS(intX, intY+1)] * (1.0f - decX) * decY +
-                   q[POS(intX+1, intY)] * decX * (1.0f - decY) +
-                   q[POS(intX+1, intY+1)] * decX * decY;
-        }
-
-        CellType out{};
-        if (xInRange) {
-            if (yInRange) {
-                out += q[POS(intX, intY)] * (1.0f - decX) * (1.0f - decY);
-            }
-            if (inRange(intY+1)) {
-                out += q[POS(intX, intY+1)] * (1.0f - decX) * decY;
-            }
-        }
-        
-        if (inRange(intX+1)) {
-            if (yInRange) {
-                out += q[POS(intX+1, intY)] * decX * (1.0f - decY);
-            }
-            if (inRange(intY+1)) {
-                out += q[POS(intX+1, intY+1)] * decX * decY;
-            }
-        }
-        return out;
+        return q[POS(intX, intY)] * (1.0f - decX) * (1.0f - decY) +
+               q[POS(intX, intY+1)] * (1.0f - decX) * decY +
+               q[POS(intX+1, intY)] * decX * (1.0f - decY) +
+               q[POS(intX+1, intY+1)] * decX * decY;
     }
 
     GridCellsType& mGridCells;
+    const float DT;
 
     fftwf_plan m_plan_u_rc, m_plan_u_cr, m_plan_v_rc, m_plan_v_cr;
     fftwf_complex* mFft_uc;
