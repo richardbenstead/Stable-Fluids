@@ -2,11 +2,14 @@
 #include <fftw3.h>
 #include <iostream>
 
+
 template<typename GridCellsType>
 class Simulator2D
 {
+    static constexpr uint16_t GRID_SIZE = GridCellsType::GRID_SIZE;
+    auto POS(auto x, auto y) { return GridCellsType::POS(x,y); }
 public:
-    Simulator2D(GridCellsType& gridCells) :  mGridCells{gridCells}
+    Simulator2D(GridCellsType& gridCells, const float _DT) :  mGridCells{gridCells}, DT{_DT}
     {
         mFft_uc = fftwf_alloc_complex(GRID_SIZE * GRID_SIZE);
         mFft_vc = fftwf_alloc_complex(GRID_SIZE * GRID_SIZE);
@@ -74,20 +77,6 @@ public:
         dataTgt[POS(GRID_SIZE-1,GRID_SIZE-1)] = (dataTgt[POS(GRID_SIZE-2, GRID_SIZE-1)]+dataTgt[POS(GRID_SIZE-1, GRID_SIZE-2)]) * 0.5;
     }
 
-    void diffuse(auto& dataTgt, const auto& dataSource, const float diffusion, const float trans)
-    {
-        const float a = DT * diffusion * GRID_SIZE * GRID_SIZE;
-        for (int k=0 ; k<20 ; k++ ) {
-            for (int i=1 ; i<=GRID_SIZE-2 ; i++ ) {
-                for (int j=1 ; j<=GRID_SIZE-2 ; j++ ) {
-                    dataTgt[POS(i,j)] = (dataSource[POS(i,j)] + (dataTgt[POS(i-1,j)] + dataTgt[POS(i+1,j)] +
-                                         dataTgt[POS(i,j-1)] + dataTgt[POS(i,j+1)]) * a) * (trans/(1+4*a));
-                }
-            }
-            setDensityBoundary(dataTgt);
-        }
-    }
-
     void update(const auto params)
     {
         // Update velocities using forces
@@ -114,6 +103,20 @@ public:
     }
 
 private:
+    void diffuse(auto& dataTgt, const auto& dataSource, const float diffusion, const float trans)
+    {
+        const float a = DT * diffusion * GRID_SIZE * GRID_SIZE;
+        for (int k=0 ; k<20 ; k++ ) {
+            for (int i=1 ; i<=GRID_SIZE-2 ; i++ ) {
+                for (int j=1 ; j<=GRID_SIZE-2 ; j++ ) {
+                    dataTgt[POS(i,j)] = (dataSource[POS(i,j)] + (dataTgt[POS(i-1,j)] + dataTgt[POS(i+1,j)] +
+                                         dataTgt[POS(i,j-1)] + dataTgt[POS(i,j+1)]) * a) * (trans/(1+4*a));
+                }
+            }
+            setDensityBoundary(dataTgt);
+        }
+    }
+
     void diffuseVelocities(const float viscosity)
     {
         for (int i = 0; i < GRID_SIZE*GRID_SIZE; ++i) { // copy velocity
@@ -193,6 +196,7 @@ private:
     }
 
     GridCellsType& mGridCells;
+    const float DT;
 
     fftwf_plan m_plan_u_rc, m_plan_u_cr, m_plan_v_rc, m_plan_v_cr;
     fftwf_complex* mFft_uc;

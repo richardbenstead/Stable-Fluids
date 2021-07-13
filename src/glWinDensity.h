@@ -1,39 +1,33 @@
 #pragma once
-#include <GL/gl.h>
-#include "constants.h"
+#include "glWinBase.h"
 #include <math.h>
 #include <cstring>
 #include <iostream>
-#include <GLFW/glfw3.h>
 #include "utils.h"
 
+
 template<typename GridCellsType>
-class WinFluid
+class GlWinDensity : public GlWinBase
 {
+    static constexpr uint16_t GRID_SIZE = GridCellsType::GRID_SIZE;
+    auto POS(auto x, auto y) { return GridCellsType::POS(x,y); }
 public:
-    WinFluid(GridCellsType& gc) : mGridCells(gc)
+    GlWinDensity(GridCellsType& gc) : mGridCells(gc)
     {}
 
     void initialize()
     {
-        mpWindow = glfwCreateWindow(1200, 800, "Stable fluids sim", nullptr, nullptr);
-        if (!mpWindow) {
-            throw std::runtime_error("glfwCreateWindow failed");
-        }
-
-        glfwMakeContextCurrent(mpWindow);
-        glfwSetWindowUserPointer(mpWindow, this);
+        GlWinBase::initialize();
 
         // register event callback function
         glfwSetMouseButtonCallback(mpWindow, [](GLFWwindow *window, int button, int action, int mods) {
-                static_cast<WinFluid*>(glfwGetWindowUserPointer(window))->mouseEvent(window, button, action, mods); });
+                static_cast<GlWinDensity*>(glfwGetWindowUserPointer(window))->mouseEvent(window, button, action, mods); });
 
         glfwSetCursorPosCallback(mpWindow, [](GLFWwindow *window, double xpos, double ypos) {
-                static_cast<WinFluid*>(glfwGetWindowUserPointer(window))->mouseMoveEvent(window, xpos, ypos); });
+                static_cast<GlWinDensity*>(glfwGetWindowUserPointer(window))->mouseMoveEvent(window, xpos, ypos); });
 
         glfwSetKeyCallback(mpWindow, [](GLFWwindow* window, int key, int sc, int action, int mods) {
-                static_cast<WinFluid*>(glfwGetWindowUserPointer(window))->keyEvent(window, key, sc, action, mods); });
-
+                static_cast<GlWinDensity*>(glfwGetWindowUserPointer(window))->keyEvent(window, key, sc, action, mods); });
     }
 
     void draw()
@@ -53,7 +47,7 @@ public:
         glfwPollEvents();
     }
 
-    bool finished()
+    bool isFinished()
     {
         return mQuit || glfwWindowShouldClose(mpWindow);
     }
@@ -99,6 +93,7 @@ private:
 
     void mouseMoveEvent([[maybe_unused]] GLFWwindow *window, double xpos, double ypos)
     {
+        constexpr float INTERACTION = 1000000.0f;
         if (mMouseLeftDown) {
             int width, height;
             glfwGetWindowSize(mpWindow, &width, &height);
@@ -128,7 +123,6 @@ private:
 
 
     GridCellsType& mGridCells;
-    GLFWwindow *mpWindow{};
 
     int mSceneId{};
     bool mMouseLeftDown{false};

@@ -1,0 +1,6 @@
+implement clock font sizing
+header only library for computation
+reusable window component for rendering selectable attribute
+show/hide windows showing flow, fft
+adjustable boundaries/barriers
+on screen help

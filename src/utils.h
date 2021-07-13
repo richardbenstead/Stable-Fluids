@@ -1,9 +1,5 @@
 #pragma once
 #include <cmath>
-#include <iostream>
-#include "constants.h"
-
-constexpr inline int POS(int i, int j) { return i + GRID_SIZE * j; };
 
 struct XYPair
 {
@@ -30,13 +26,6 @@ struct Density
         b += den.b;
         return *this;
     }
-    Density operator=(const Density& den) {
-        r = std::max(0.0f, std::min(1.0f, den.r));
-        g = std::max(0.0f, std::min(1.0f, den.g));
-        b = std::max(0.0f, std::min(1.0f, den.b));
-        return *this;
-    }
-
     float r{}, g{}, b{};
 };
 
