@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
+set(CMAKE_CXX_COMPILER g++)
+set(CMAKE_C_COMPILER gcc)
 find_package(PkgConfig REQUIRED)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -14,7 +16,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-g -O3 -DNDEBUG")
 
 project(Stable-Fluids)
 add_executable(Stable-Fluids src/main.cpp)
-target_link_libraries(Stable-Fluids PUBLIC fftw3f GL glfw3 dl pthread ${FT2_LIBRARIES})
+target_link_libraries(Stable-Fluids PUBLIC fftw3f GL glfw dl pthread ${FT2_LIBRARIES})
 
 pkg_check_Modules(FT2 REQUIRED freetype2)
 target_include_directories(Stable-Fluids PUBLIC ${FT2_INCLUDE_DIRS})
