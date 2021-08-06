@@ -11,4 +11,4 @@ Only tested on Linux
 ## Screenshots
 ![Fire](output/fire.png)
 ![Fire clock](output/fireClock.png)
-[![Liquid](output/ss1.png)](https://youtu.be/tUs-WExrkkI)
+[![Liquid](output/liquid.png)](https://youtu.be/tUs-WExrkkI)
