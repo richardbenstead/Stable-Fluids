@@ -12,7 +12,7 @@ public:
     static constexpr int16_t GRID_SIZE{GS};
     static constexpr int32_t ARR_SIZE{GS*GS};
 
-    constexpr inline static int32_t POS(int16_t i, int16_t j) { return i + GRID_SIZE * j; };
+    constexpr inline static int32_t POS(int32_t i, int32_t j) { return i + GRID_SIZE * j; };
     std::array<XYPair, ARR_SIZE> velocity{};
     std::array<XYPair, ARR_SIZE> velocityCopy{};
 

@@ -9,6 +9,6 @@ Only tested on Linux
 * GLFW
 
 ## Screenshots
-![Fire](output/fire.png)
-![Fire clock](output/fireClock.png)
-[![Liquid](output/liquid.png)](https://youtu.be/tUs-WExrkkI)
+![Fire](output/sf_fire.gif)
+![Fire clock](output/sf_clock.gif)
+[![Liquid](output/sf_balls.gif)](https://youtu.be/tUs-WExrkkI)

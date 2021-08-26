@@ -15,7 +15,7 @@
 
 class StableFluids
 {
-    static constexpr int GRID_SIZE{300};
+    static constexpr int GRID_SIZE{350};
     static constexpr float DT{0.001f};
 public:
     using GridCellsType = GridCells2D<GRID_SIZE>;

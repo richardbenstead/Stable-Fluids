@@ -12,7 +12,7 @@ class GlWinBase
 public:
     void initialize()
     {
-        mpWindow = glfwCreateWindow(1200, 800, "Stable fluids sim", nullptr, nullptr);
+        mpWindow = glfwCreateWindow(350, 350, "Stable fluids sim", nullptr, nullptr);
         if (!mpWindow) {
             throw std::runtime_error("glfwCreateWindow failed");
         }
